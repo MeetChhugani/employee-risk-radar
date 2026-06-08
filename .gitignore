@@ -1,0 +1,9 @@
+.venv/
+*.csv
+*.png
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
+desktop.ini
+.streamlit/
