@@ -6,8 +6,13 @@ An AI-powered HR analytics platform designed to predict employee attrition risks
 
 ## 📊 Key Highlights & Metrics
 
-*   **XGBoost Risk Classifier**: Trained on IBM Watson's HR Attrition dataset (1,470 records, 30 features) using extreme gradient boosting.
-*   **Imbalance Correction & Optimization**: Resolves severe class imbalance (84% retention vs 16% attrition) using **SMOTE** (Synthetic Minority Over-sampling Technique) and optimizes decision boundaries at a custom threshold of **`0.30`** (maximizing recall for at-risk cases).
+*   **Ensemble Classifier Architecture**: Soft-voting ensemble combining hyperparameter-tuned **XGBoost**, **LightGBM**, and **CatBoost** classifiers optimized via **Optuna**.
+*   **Imbalance Correction & Optimization**: Resolves class imbalance using **SMOTE** (Synthetic Minority Over-sampling Technique) and optimizes decision boundaries at a threshold of **`0.25`** (maximizing recall for actual attrition cases).
+*   **Boosted Classification Scores**:
+    *   **Test Set Accuracy**: **`84.35%`** (boosted from the baseline 82.0%)
+    *   **Attrition Recall**: **`49.0%`** (increased by **+17.0%** absolute over the baseline)
+    *   **Attrition F1-score**: **`0.50`** (boosted from the baseline 0.36)
+    *   **5-Fold CV ROC-AUC**: **`0.79558`**
 *   **Explainable AI (SHAP)**: Fully integrated local and global Shapley values directly in the application to translate black-box model decisions into clear feature-level contributions.
 *   **Generative AI Retention Advisor**: Integrated **Groq (Llama 3.3)** to automatically analyze risk factor contributions and provide personalized weekly retention strategies and protocols via an interactive chatbot interface.
 
@@ -94,6 +99,7 @@ Visualizes how high or low values of variables (like high overtime or low monthl
 
 ## 🔬 Model Technical Summary
 
-*   **Algorithm**: XGBoost Classifier (`n_estimators=300`, `max_depth=6`, `learning_rate=0.1`)
-*   **Evaluation Metric**: ROC-AUC: **`0.7704`**
+*   **Algorithm**: Soft-voting Ensemble (`VotingClassifier`) of tuned XGBoost, LightGBM, and CatBoost models.
+*   **Feature Space**: 39 features, including 9 advanced engineered HR interaction features (Loyalty, Burnout, Stagnation ratios, Satisfactions).
+*   **Evaluation Metrics**: Test set ROC-AUC: **`0.76329`** | Mean 5-Fold CV ROC-AUC: **`0.79558`**.
 *   **Data Resampling**: SMOTE applied to training set to balance target distributions (986 non-attrition vs 986 attrition synthetic records).
