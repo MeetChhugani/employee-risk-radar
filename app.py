@@ -281,6 +281,30 @@ except Exception as e:
     st.error(f"❌ Error loading model file models/attrition_model.pkl. Ensure it exists. Error: {e}")
     st.stop()
 
+def add_engineered_features(df):
+    df = df.copy()
+    # 1. Total Satisfaction Index
+    df['TotalSatisfaction'] = df['JobSatisfaction'] + df['EnvironmentSatisfaction'] + df['RelationshipSatisfaction']
+    
+    # 2. Tenure ratios
+    df['YearsSincePromotionRatio'] = df['YearsSinceLastPromotion'] / (df['YearsAtCompany'] + 1)
+    df['YearsWithManagerRatio'] = df['YearsWithCurrManager'] / (df['YearsAtCompany'] + 1)
+    df['YearsInRoleRatio'] = df['YearsInCurrentRole'] / (df['YearsAtCompany'] + 1)
+    
+    # 3. Income relative indicators
+    df['IncomePerWorkingYear'] = df['MonthlyIncome'] / (df['TotalWorkingYears'] + 1)
+    df['IncomePerAge'] = df['MonthlyIncome'] / df['Age']
+    
+    # 4. Job Hopper index
+    df['CompaniesPerWorkingYear'] = df['NumCompaniesWorked'] / (df['TotalWorkingYears'] + 1)
+    
+    # 5. Overtime burnout proxy
+    df['WorklifeOvertimeInteraction'] = df['WorkLifeBalance'] * (1 - df['OverTime'])
+    
+    # 6. Commute friction relative to compensation
+    df['DistanceIncomeRatio'] = df['DistanceFromHome'] / (df['MonthlyIncome'] + 1)
+    return df
+
 # --- Preset Profiles logic ---
 presets = {
     "Select Preset Profile...": None,
@@ -451,12 +475,13 @@ input_dict = {
 
 if predict_clicked:
     input_df = pd.DataFrame([input_dict])
+    input_df = add_engineered_features(input_df)
     input_df = input_df.reindex(columns=features, fill_value=0)
 
     prob = model.predict_proba(input_df)[0][1]
     prediction = prob >= threshold
 
-    st.session_state['employee_data'] = input_dict
+    st.session_state['employee_data'] = input_df.iloc[0].to_dict()
     st.session_state['attrition_prob'] = prob
     st.session_state['prediction'] = prediction
     st.session_state['prediction_made'] = True
@@ -496,7 +521,7 @@ with dashboard_col:
         
         # Explanations using Matplotlib & SHAP Styled transparently
         with st.expander("🔍 Feature Impact Analysis (SHAP)", expanded=True):
-            explainer = shap.TreeExplainer(model)
+            explainer = shap.TreeExplainer(model.estimators_[0])
             input_df = pd.DataFrame([st.session_state['employee_data']])
             input_df = input_df.reindex(columns=features, fill_value=0)
             shap_values = explainer.shap_values(input_df)

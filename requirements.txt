@@ -9,3 +9,6 @@ matplotlib
 imbalanced-learn
 groq
 python-dotenv
+optuna
+lightgbm
+catboost
