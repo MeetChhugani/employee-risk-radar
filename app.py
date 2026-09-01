@@ -6,13 +6,20 @@ import shap
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 import os
-from groq import Groq
+from huggingface_hub import InferenceClient
 
 # --- Load Environment Variables ---
 load_dotenv()
 
-# --- Load API Key (Identical to original app logic) ---
-api_key = os.environ.get("GROQ_API_KEY") or st.secrets.get("GROQ_API_KEY", "")
+# --- Load API Key (Hugging Face Access Token) ---
+api_key = (
+    os.environ.get("HF_TOKEN")
+    or os.environ.get("HUGGINGFACE_API_KEY")
+    or st.secrets.get("HF_TOKEN", "")
+    or st.secrets.get("HUGGINGFACE_API_KEY", "")
+    or os.environ.get("GROQ_API_KEY")
+    or st.secrets.get("GROQ_API_KEY", "")
+)
 
 # --- Page Config ---
 st.set_page_config(
@@ -369,14 +376,14 @@ for k, v in inputs_to_initialize.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# --- Groq LLM Client helper ---
+# --- Hugging Face LLM Client helper ---
 def call_llm(prompt, api_key, max_tokens=500):
     if not api_key:
-        return "⚠️ Please configure your Groq API Key in your environment variables or Streamlit secrets to enable AI suggestions."
+        return "⚠️ Please configure your Hugging Face Access Token (HF_TOKEN) in your environment variables or Streamlit secrets to enable AI suggestions."
     try:
-        client = Groq(api_key=api_key)
+        client = InferenceClient(api_key=api_key)
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="Qwen/Qwen2.5-Coder-32B-Instruct",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens
         )

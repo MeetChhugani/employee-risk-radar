@@ -14,7 +14,7 @@ An AI-powered HR analytics platform designed to predict employee attrition risks
     *   **Attrition F1-score**: **`0.50`** (boosted from the baseline 0.36)
     *   **5-Fold CV ROC-AUC**: **`0.79558`**
 *   **Explainable AI (SHAP)**: Fully integrated local and global Shapley values directly in the application to translate black-box model decisions into clear feature-level contributions.
-*   **Generative AI Retention Advisor**: Integrated **Groq (Llama 3.3)** to automatically analyze risk factor contributions and provide personalized weekly retention strategies and protocols via an interactive chatbot interface.
+*   **Generative AI Retention Advisor**: Integrated **Hugging Face (Llama 3.2)** to automatically analyze risk factor contributions and provide personalized weekly retention strategies and protocols via an interactive chatbot interface.
 
 ---
 
@@ -87,7 +87,7 @@ Visualizes how high or low values of variables (like high overtime or low monthl
 
 4. Configure environment variables. Create a `.env` file in the root directory:
    ```env
-   GROQ_API_KEY=your_groq_api_key_here
+   HF_TOKEN=your_huggingface_token_here
    ```
 
 5. Run the Streamlit web application:

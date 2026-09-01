@@ -7,7 +7,7 @@ shap
 joblib
 matplotlib
 imbalanced-learn
-groq
+huggingface_hub
 python-dotenv
 optuna
 lightgbm
