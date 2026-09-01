@@ -7,3 +7,5 @@ __pycache__/
 .env
 desktop.ini
 .streamlit/
+.agent/
+scratch/
