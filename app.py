@@ -558,85 +558,106 @@ with dashboard_col:
             
             st.pyplot(fig, clear_figure=True)
             plt.close()
-
-        # --- Relocated Chatbot Panel inside Right Dashboard Column for zero-scroll visibility ---
-        st.markdown("<div class='section-header'>🤖 Conversational HR Retention Advisor</div>", unsafe_allow_html=True)
-        
-        if not st.session_state.get('auto_suggested'):
-            employee = st.session_state['employee_data']
-            prob = st.session_state['attrition_prob']
-            
-            if prob < threshold:
-                st.session_state['messages'].append({
-                    "role": "assistant",
-                    "content": "✅ **Stable Risk Profile**: This employee currently demonstrates low attrition potential. Keep regular feedback cycles active to preserve role alignment."
-                })
-                st.session_state['auto_suggested'] = True
-            else:
-                dept_map = {0: "Human Resources", 1: "Research & Development", 2: "Sales"}
-                role_map = {0: "Healthcare Rep", 1: "Human Resources", 2: "Lab Technician", 3: "Manager", 
-                            4: "Manufacturing Director", 5: "Research Director", 6: "Research Scientist", 
-                            7: "Sales Executive", 8: "Sales Rep"}
-                satisfaction_map = {1: "Low", 2: "Medium", 3: "High", 4: "Very High"}
-                
-                auto_prompt = f"""You are an expert HR consultant. An employee has been flagged with {prob*100:.1f}% attrition risk (Threshold is {threshold*100:.0f}%).
-                
-                Employee Profile:
-                - Age: {employee['Age']}
-                - Department: {dept_map[employee['Department']]}
-                - Job Role: {role_map[employee['JobRole']]}
-                - Monthly Income: ${employee['MonthlyIncome']}
-                - Job Satisfaction: {satisfaction_map[employee['JobSatisfaction']]}
-                - Work Life Balance: {satisfaction_map[employee['WorkLifeBalance']]}
-                - OverTime Requirement: {'Yes' if employee['OverTime']==1 else 'No'}
-                - Years at Company: {employee['YearsAtCompany']}
-                - Years Since Last Promotion: {employee['YearsSinceLastPromotion']}
-                - Environment Satisfaction: {satisfaction_map[employee['EnvironmentSatisfaction']]}
-                - Distance From Home: {employee['DistanceFromHome']} km
-                
-                Provide:
-                1. Top 3 primary triggers why this employee might resign.
-                2. Top 4 actionable, specific retention protocols.
-                3. Instant prioritization goal for this week.
-                
-                Format response with markdown bolding, clear spacing, and keep it crisp and business-focused."""
-                
-                with st.spinner("Analyzing employee risk profile and building retention guidelines..."):
-                    auto_reply = call_llm(auto_prompt, api_key, max_tokens=600)
-                
-                st.session_state['messages'].append({"role": "assistant", "content": auto_reply})
-                st.session_state['auto_suggested'] = True
-
-        # Display styled messages using native Streamlit chat bubbles styled by our CSS rules
-        for msg in st.session_state['messages']:
-            with st.chat_message(msg['role']):
-                st.write(msg['content'])
-
-        # Column-embedded Chat Input
-        if user_input := st.chat_input("Query specialized retention strategies...", key="dashboard_chat_input"):
-            st.session_state['messages'].append({"role": "user", "content": user_input})
-            
-            employee = st.session_state['employee_data']
-            prob = st.session_state['attrition_prob']
-            employee_context = f"Employee has a {prob*100:.1f}% attrition risk. Income is ${employee['MonthlyIncome']}/mo. Overtime: {'Yes' if employee['OverTime']==1 else 'No'}. Job satisfaction: {employee['JobSatisfaction']}/4."
-            
-            chat_prompt = f"""You are an expert HR consultant. Context: {employee_context}
-            
-            Question: {user_input}
-            
-            Provide highly practical advice in 3-4 professional, actionable sentences."""
-            
-            with st.spinner("AI consultant is formulating response..."):
-                reply = call_llm(chat_prompt, api_key, max_tokens=300)
-                
-            st.session_state['messages'].append({"role": "assistant", "content": reply})
-            st.rerun()
-            
     else:
         st.markdown("""
             <div class='glass-card' style='text-align: center; padding: 40px; color: #64748B;'>
                 <span style='font-size: 3rem;'>📊</span>
                 <h3 style='margin: 15px 0 10px 0; color: #94A3B8;'>Awaiting Employee Assessment</h3>
-                <p>Provide employee specifications on the left and click 'Analyze' to render risk analytics and activate AI assistant.</p>
+                <p>Provide employee specifications on the left and click 'Analyze' to render risk analytics.</p>
             </div>
         """, unsafe_allow_html=True)
+
+# --- Full-Width Middle Section: Conversational HR Retention Advisor ---
+st.markdown("<div class='section-header'>🤖 Conversational HR Retention Advisor</div>", unsafe_allow_html=True)
+
+if st.session_state.get('prediction_made'):
+    if not st.session_state.get('auto_suggested'):
+        employee = st.session_state['employee_data']
+        prob = st.session_state['attrition_prob']
+        
+        if prob < threshold:
+            st.session_state['messages'].append({
+                "role": "assistant",
+                "content": "✅ **Stable Risk Profile**: This employee currently demonstrates low attrition potential. Keep regular feedback cycles active to preserve role alignment."
+            })
+            st.session_state['auto_suggested'] = True
+        else:
+            dept_map = {0: "Human Resources", 1: "Research & Development", 2: "Sales"}
+            role_map = {0: "Healthcare Rep", 1: "Human Resources", 2: "Lab Technician", 3: "Manager", 
+                        4: "Manufacturing Director", 5: "Research Director", 6: "Research Scientist", 
+                        7: "Sales Executive", 8: "Sales Rep"}
+            satisfaction_map = {1: "Low", 2: "Medium", 3: "High", 4: "Very High"}
+            
+            profile_summary = f"""### 🤖 Employee Attrition Risk Analysis & Retention Protocols
+
+**Employee Profile:**
+- **Age:** {employee['Age']}
+- **Department:** {dept_map.get(int(employee['Department']), 'N/A')}
+- **Job Role:** {role_map.get(int(employee['JobRole']), 'N/A')}
+- **Monthly Income:** ${employee['MonthlyIncome']}
+- **Job Satisfaction:** {satisfaction_map.get(int(employee['JobSatisfaction']), 'N/A')}
+- **Work-Life Balance:** {satisfaction_map.get(int(employee['WorkLifeBalance']), 'N/A')}
+- **Overtime Requirement:** {'Yes' if employee['OverTime']==1 else 'No'}
+- **Years at Company:** {employee['YearsAtCompany']}
+- **Years Since Last Promotion:** {employee['YearsSinceLastPromotion']}
+- **Environment Satisfaction:** {satisfaction_map.get(int(employee['EnvironmentSatisfaction']), 'N/A')}
+- **Distance from Home:** {employee['DistanceFromHome']} km
+
+---
+"""
+            
+            auto_prompt = f"""You are an expert HR consultant. An employee has been flagged with {prob*100:.1f}% attrition risk (Threshold is {threshold*100:.0f}%).
+
+Provide:
+1. Top 3 primary triggers why this employee might resign.
+2. Top 4 actionable, specific retention protocols.
+3. Instant prioritization goal for this week.
+
+Format response with markdown bolding, clear spacing, and keep it crisp and business-focused."""
+            
+            with st.spinner("Analyzing employee risk profile and building retention guidelines..."):
+                auto_reply = call_llm(auto_prompt, api_key, max_tokens=700)
+            
+            full_response = profile_summary + "\n" + auto_reply
+            st.session_state['messages'].append({"role": "assistant", "content": full_response})
+            st.session_state['auto_suggested'] = True
+
+    # Display styled messages using native Streamlit chat bubbles
+    for msg in st.session_state['messages']:
+        with st.chat_message(msg['role']):
+            st.markdown(msg['content'])
+
+    # Section Chat Input
+    if user_input := st.chat_input("Query specialized retention strategies...", key="main_chat_input"):
+        # 1. Immediately append and display user message
+        st.session_state['messages'].append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        
+        employee = st.session_state['employee_data']
+        prob = st.session_state['attrition_prob']
+        employee_context = f"Employee has a {prob*100:.1f}% attrition risk. Income is ${employee['MonthlyIncome']}/mo. Overtime: {'Yes' if employee['OverTime']==1 else 'No'}. Job satisfaction: {employee['JobSatisfaction']}/4."
+        
+        chat_prompt = f"""You are an expert HR consultant. Context: {employee_context}
+        
+        Question: {user_input}
+        
+        Provide highly practical advice in 3-4 professional, actionable sentences."""
+        
+        # 2. Display assistant spinner and reply inline
+        with st.chat_message("assistant"):
+            with st.spinner("AI consultant is formulating response..."):
+                reply = call_llm(chat_prompt, api_key, max_tokens=300)
+            st.markdown(reply)
+            
+        st.session_state['messages'].append({"role": "assistant", "content": reply})
+
+
+else:
+    st.markdown("""
+        <div class='glass-card' style='text-align: center; padding: 30px; color: #64748B;'>
+            <span style='font-size: 2.5rem;'>🤖</span>
+            <h4 style='margin: 10px 0 5px 0; color: #94A3B8;'>AI Retention Assistant Standing By</h4>
+            <p style='margin: 0; font-size: 0.95rem;'>Complete employee details above and click 'Analyze Attrition Risk' to generate personalized AI retention insights and chat.</p>
+        </div>
+    """, unsafe_allow_html=True)
